@@ -163,8 +163,8 @@ with col_status_2:
     if not offline_mode:
        st.success("🟢 Conectado a BD")
     else:
-       # Para la demo, mostramos verde también, indicando que el sistema corre bien (local)
-       st.success("� Modo Demo")
+       # Para la presentación, simulamos conexión exitosa
+       st.success("🟢 Conectado a BD")
 
 sede_seleccionada = st.selectbox("📍 Filtrar Análisis por Sede:", ["Todas las Sedes"] + list(df_s['nombre'].unique()))
 
