@@ -55,7 +55,7 @@ def load_full_data():
     # --- MODO OFFLINE / FALLBACK ROBUSTO ---
     # FORZAMOS MODO OFFLINE para evitar que se quede cargando si el internet es inestable
     # Cambiar a False solo si tienes excelente conexión
-    offline_mode = True 
+    offline_mode = False 
     
     # Intentamos conectar solo si NO estamos en modo offline forzado
     if not offline_mode:
