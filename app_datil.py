@@ -292,6 +292,21 @@ with tab2:
     
     st.plotly_chart(fig_pareto, use_container_width=True)
 
+    st.markdown("---")
+    st.subheader("🔎 Visió X-Ray: Clasificación por Categoría")
+    
+    # Agrupamos por Categoria y Clasificacion para ver donde está el dinero "A"
+    df_cat_pareto = df_view_p.groupby(['categoria', 'Clasificación'])['valor_inv_total'].sum().reset_index()
+    
+    # Gráfico de Barras Apiladas: Categoría en X, Valor en Y, color por ABC
+    fig_cat_abc = px.bar(df_cat_pareto, x='categoria', y='valor_inv_total', color='Clasificación',
+                         title="Concentración de Valor por Categoría (¿Dónde están mis 'A'?)",
+                         labels={'valor_inv_total': 'Valor Inventario ($)', 'categoria': 'Categoría'},
+                         text_auto='.2s', template="plotly_white",
+                         color_discrete_map={'A (Top 80%)': '#1C83E1', 'B (Siguientes 15%)': '#87CEEB', 'C (Últimos 5%)': '#D3D3D3'})
+    
+    st.plotly_chart(fig_cat_abc, use_container_width=True)
+
 with tab3:
     st.subheader("Pronóstico de Demanda Trimestral")
     meses = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic", "Ene'26", "Feb'26"]
