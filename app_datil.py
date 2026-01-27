@@ -56,11 +56,21 @@ except Exception as e:
 @st.cache_data(ttl=600)
 def load_full_data():
     # --- MODO OFFLINE / FALLBACK ROBUSTO ---
-    # FORZAMOS MODO OFFLINE para velocidad máxima en la presentación
-    offline_mode = True
+    # FORZAMOS MODO OFFLINE: False para intentar conectar a base de datos real
+    offline_mode = False
     
     # Intentamos conectar solo si NO estamos en modo offline forzado
     if not offline_mode:
+
+# ... (skipped content) ...
+
+# Indicador de Estado de Conexión
+col_status_1, col_status_2 = st.columns([0.85, 0.15])
+with col_status_2:
+    if not offline_mode:
+       st.success("🟢 Conectado a BD")
+    else:
+       st.warning("⚠️ Modo Offline")
         try:
             # Check 1: Validar si el cliente DB existe
             if 'db' not in globals():
