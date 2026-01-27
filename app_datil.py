@@ -25,7 +25,10 @@ if not firebase_admin._apps:
         cred = credentials.Certificate("firebase_credentials.json")
         firebase_admin.initialize_app(cred)
     except Exception as e:
-        st.error(f"Error cargando credenciales: {e}")
+        # En producción sin credenciales, esto fallará. 
+        # Ocultamos el error rojo para que se vea profesional y activamos modo offline silenciosamente.
+        print(f"Advertencia: No se encontraron credenciales ({e})")
+        pass
 
 try:
     db = firestore.client()
@@ -57,7 +60,8 @@ def load_full_data():
     
     if offline_mode:
         # Generación de Datos Simulados para "Offline Mode"
-        st.warning("⚠️ Usando datos de demostración (Modo Offline Rápido)")
+        # Mostramos UN solo mensaje limpio para la demo
+        st.warning("⚠️ **Modo Demo Activado**: Operando con datos simulados (Sin conexión a Base de Datos)")
         # 1. Sedes
         regiones = ['Central', 'Capital', 'Occidente', 'Oriente', 'Andes', 'Guayana']
         df_s = pd.DataFrame({
