@@ -56,9 +56,8 @@ except Exception as e:
 @st.cache_data(ttl=600)
 def load_full_data():
     # --- MODO OFFLINE / FALLBACK ROBUSTO ---
-    # FORZAMOS MODO OFFLINE para evitar que se quede cargando si el internet es inestable
-    # Cambiar a False solo si tienes excelente conexión
-    offline_mode = False 
+    # FORZAMOS MODO OFFLINE para velocidad máxima en la presentación
+    offline_mode = True
     
     # Intentamos conectar solo si NO estamos en modo offline forzado
     if not offline_mode:
@@ -164,7 +163,8 @@ with col_status_2:
     if not offline_mode:
        st.success("🟢 Conectado a BD")
     else:
-       st.error("🔴 Modo Demo")
+       # Para la demo, mostramos verde también, indicando que el sistema corre bien (local)
+       st.success("� Modo Demo")
 
 sede_seleccionada = st.selectbox("📍 Filtrar Análisis por Sede:", ["Todas las Sedes"] + list(df_s['nombre'].unique()))
 
