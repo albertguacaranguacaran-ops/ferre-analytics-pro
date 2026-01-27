@@ -139,14 +139,21 @@ def load_full_data():
         df_s['lat'] = df_s['region'].map(lambda x: coords.get(x, [10.5, -66.9])[0] + np.random.uniform(-0.1, 0.1))
         df_s['lon'] = df_s['region'].map(lambda x: coords.get(x, [10.5, -66.9])[1] + np.random.uniform(-0.1, 0.1))
     
-    return df_p, df_s
+    return df_p, df_s, offline_mode
 
-df_p, df_s = load_full_data()
+df_p, df_s, offline_mode = load_full_data()
 
 # --- HEADER Y SELECTOR ---
 st.title("🇻🇪 Datil Retail: Inteligencia Operativa y Financiera")
 st.markdown("**Autor: Lic. Albert Guacaran** | *Inteligencia de Negocios para la Toma Rápida de Decisiones*") # Branding Principal
-sede_seleccionada = st.selectbox("📍 Filtrar Análisis por Sede:", ["Todas las Sedes"] + list(df_s['nombre'].unique()))
+
+# Indicador de Estado de Conexión
+col_status_1, col_status_2 = st.columns([0.85, 0.15])
+with col_status_2:
+    if not offline_mode:
+       st.success("🟢 Conectado a BD")
+    else:
+       st.error("🔴 Modo Demo")sede_seleccionada = st.selectbox("📍 Filtrar Análisis por Sede:", ["Todas las Sedes"] + list(df_s['nombre'].unique()))
 
 # Filtrado dinámico
 if sede_seleccionada != "Todas las Sedes":
