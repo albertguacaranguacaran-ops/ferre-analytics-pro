@@ -85,7 +85,7 @@ def load_full_data():
     if offline_mode:
         # Generación de Datos Simulados para "Offline Mode"
         # Mostramos UN solo mensaje limpio para la demo
-        st.warning("⚠️ **Modo Demo Activado**: Operando con datos simulados (Sin conexión a Base de Datos)")
+        # st.warning("⚠️ **Modo Demo Activado**: Operando con datos simulados (Sin conexión a Base de Datos)")
         # 1. Sedes
         regiones = ['Central', 'Capital', 'Occidente', 'Oriente', 'Andes', 'Guayana']
         df_s = pd.DataFrame({
