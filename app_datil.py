@@ -56,8 +56,8 @@ except Exception as e:
 @st.cache_data(ttl=600)
 def load_full_data():
     # --- MODO OFFLINE / FALLBACK ROBUSTO ---
-    # FORZAMOS MODO OFFLINE: False para intentar conectar a base de datos real
-    offline_mode = False
+    # FORZAMOS MODO OFFLINE: True para garantizar velocidad en la presentación
+    offline_mode = True
     
     # Intentamos conectar solo si NO estamos en modo offline forzado
     if not offline_mode:
