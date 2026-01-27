@@ -153,7 +153,9 @@ with col_status_2:
     if not offline_mode:
        st.success("🟢 Conectado a BD")
     else:
-       st.error("🔴 Modo Demo")sede_seleccionada = st.selectbox("📍 Filtrar Análisis por Sede:", ["Todas las Sedes"] + list(df_s['nombre'].unique()))
+       st.error("🔴 Modo Demo")
+
+sede_seleccionada = st.selectbox("📍 Filtrar Análisis por Sede:", ["Todas las Sedes"] + list(df_s['nombre'].unique()))
 
 # Filtrado dinámico
 if sede_seleccionada != "Todas las Sedes":
