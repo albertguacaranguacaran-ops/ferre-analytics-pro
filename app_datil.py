@@ -29,7 +29,11 @@ if not firebase_admin._apps:
         # A) Intentar cargar desde Secrets de Streamlit Cloud (Producción)
         if 'FIREBASE_CREDENTIALS' in st.secrets:
             # Parseamos el JSON string que está en los secrets
-            cred_info = json.loads(st.secrets['FIREBASE_CREDENTIALS'])
+            # Usamos strict=False para ser más tolerantes con los caracteres de control
+            secret_str = st.secrets['FIREBASE_CREDENTIALS']
+            # Reemplazamos saltos de línea literales si existen
+            # secret_str = secret_str.replace('\n', '\\n') 
+            cred_info = json.loads(secret_str, strict=False)
             cred = credentials.Certificate(cred_info)
             firebase_admin.initialize_app(cred)
             
