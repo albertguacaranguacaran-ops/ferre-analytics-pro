@@ -6,6 +6,8 @@ import plotly.express as px
 import plotly.graph_objects as go
 import numpy as np
 
+import json
+
 # 1. FORZAR ESTILO CORPORATIVO (FONDO BLANCO Y LIMPIO)
 st.set_page_config(page_title="Datil Retail Intelligence Pro", layout="wide")
 
@@ -22,8 +24,20 @@ st.markdown("""
 # 2. CONEXIÓN A FIREBASE
 if not firebase_admin._apps:
     try:
-        cred = credentials.Certificate("firebase_credentials.json")
-        firebase_admin.initialize_app(cred)
+        # ESTRATEGIA HÍBRIDA: CLOUD vs LOCAL
+        
+        # A) Intentar cargar desde Secrets de Streamlit Cloud (Producción)
+        if 'FIREBASE_CREDENTIALS' in st.secrets:
+            # Parseamos el JSON string que está en los secrets
+            cred_info = json.loads(st.secrets['FIREBASE_CREDENTIALS'])
+            cred = credentials.Certificate(cred_info)
+            firebase_admin.initialize_app(cred)
+            
+        # B) Intentar cargar desde Archivo Local (Desarrollo)
+        else:
+            cred = credentials.Certificate("firebase_credentials.json")
+            firebase_admin.initialize_app(cred)
+            
     except Exception as e:
         # En producción sin credenciales, esto fallará. 
         # Ocultamos el error rojo para que se vea profesional y activamos modo offline silenciosamente.
