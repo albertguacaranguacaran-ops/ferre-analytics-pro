@@ -39,15 +39,14 @@ if not firebase_admin._apps:
             firebase_admin.initialize_app(cred)
             
     except Exception as e:
-        # En producción sin credenciales, esto fallará. 
-        # Ocultamos el error rojo para que se vea profesional y activamos modo offline silenciosamente.
-        print(f"Advertencia: No se encontraron credenciales ({e})")
+        # Mostramos el error real para depurar por qué fallan los secrets
+        st.warning(f"⚠️ Error de Credenciales: {e}")
         pass
 
 try:
     db = firestore.client()
-except:
-    st.warning("No se pudo conectar a Firebase. Usando datos locales si están cacheados.")
+except Exception as e:
+    st.warning(f"No se pudo conectar a Firebase: {e}")
 
 # 3. CARGA Y PROCESAMIENTO DE DATA (CON SIMULACIÓN DE MÓDULOS FALTANTES)
 @st.cache_data(ttl=600)
@@ -60,6 +59,10 @@ def load_full_data():
     # Intentamos conectar solo si NO estamos en modo offline forzado
     if not offline_mode:
         try:
+            # Check 1: Validar si el cliente DB existe
+            if 'db' not in globals():
+                raise Exception("Cliente Firestore no inicializado")
+
             # Intentamos conectar con timeout corto (simulado por la lógica de python)
             if 'prod_docs' not in locals():
                  prod_docs = db.collection('productos').limit(2000).stream() 
@@ -70,7 +73,7 @@ def load_full_data():
                  if df_p.empty: raise Exception("Base de datos vacía")
         except Exception as e:
             offline_mode = True
-            st.warning(f"⚠️ Modo Offline Activado: No se pudo conectar a Firebase ({e}). Usando datos simulados.")
+            st.warning(f"⚠️ Modo Offline Activado: {e}. Usando datos simulados.")
     
     if offline_mode:
         # Generación de Datos Simulados para "Offline Mode"
