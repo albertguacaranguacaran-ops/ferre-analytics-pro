@@ -67,17 +67,21 @@ def load_full_data():
             if 'db' not in globals():
                 raise Exception("Cliente Firestore no inicializado")
 
-            # Intentamos conectar con timeout corto (simulado por la lógica de python)
+            # Intentamos conectar con limit
+            # NOTA: En Streamlit Cloud a veces el stream() se cuelga si la red es lenta.
+            # Convertimos a lista inmediatamente para forzar la bajada de datos
             if 'prod_docs' not in locals():
-                 prod_docs = db.collection('productos').limit(2000).stream() 
-                 sede_docs = db.collection('sedes').stream()
-                 df_p = pd.DataFrame([d.to_dict() for d in prod_docs])
-                 df_s = pd.DataFrame([d.to_dict() for d in sede_docs])
+                 prod_ref = db.collection('productos').limit(100) # LIMITAMOS A 100 PARA PROBAR CONEXIÓN RÁPIDA
+                 sede_ref = db.collection('sedes')
                  
-                 if df_p.empty: raise Exception("Base de datos vacía")
+                 # Usamos get() en lugar de stream() para comportamiento síncrono más predecible en cloud
+                 df_p = pd.DataFrame([d.to_dict() for d in prod_ref.get()])
+                 df_s = pd.DataFrame([d.to_dict() for d in sede_ref.get()])
+                 
+                 if df_p.empty: raise Exception("Base de datos vacía o lectura fallida")
         except Exception as e:
             offline_mode = True
-            st.warning(f"⚠️ Modo Offline Activado: {e}. Usando datos simulados.")
+            st.warning(f"⚠️ Timeout/Error de Red: {e}. Cambiando a Modo Offline.")
     
     if offline_mode:
         # Generación de Datos Simulados para "Offline Mode"
