@@ -8,7 +8,7 @@ import numpy as np
 
 import json
 
-# 1. FORZAR ESTILO CORPORATIVO (FONDO BLANCO Y LIMPIO)
+
 st.set_page_config(page_title="Datil Retail Intelligence Pro", layout="wide")
 
 st.markdown("""
@@ -21,29 +21,26 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-# 2. CONEXIÓN A FIREBASE
 if not firebase_admin._apps:
     try:
-        # ESTRATEGIA HÍBRIDA: CLOUD vs LOCAL
+
         
-        # A) Intentar cargar desde Secrets de Streamlit Cloud (Producción)
+    
         if 'FIREBASE_CREDENTIALS' in st.secrets:
             # Parseamos el JSON string que está en los secrets
-            # Usamos strict=False para ser más tolerantes con los caracteres de control
+        
             secret_str = st.secrets['FIREBASE_CREDENTIALS']
-            # Reemplazamos saltos de línea literales si existen
-            # secret_str = secret_str.replace('\n', '\\n') 
+         
             cred_info = json.loads(secret_str, strict=False)
             cred = credentials.Certificate(cred_info)
             firebase_admin.initialize_app(cred)
-            
-        # B) Intentar cargar desde Archivo Local (Desarrollo)
+      
         else:
             cred = credentials.Certificate("firebase_credentials.json")
             firebase_admin.initialize_app(cred)
             
     except Exception as e:
-        # Mostramos el error real para depurar por qué fallan los secrets
+    
         st.warning(f"⚠️ Error de Credenciales: {e}")
         pass
 
@@ -52,28 +49,22 @@ try:
 except Exception as e:
     st.warning(f"No se pudo conectar a Firebase: {e}")
 
-# 3. CARGA Y PROCESAMIENTO DE DATA (CON SIMULACIÓN DE MÓDULOS FALTANTES)
 @st.cache_data(ttl=600)
 def load_full_data():
-    # --- MODO OFFLINE / FALLBACK ROBUSTO ---
-    # FORZAMOS MODO OFFLINE: True para garantizar velocidad en la presentación
+
     offline_mode = True
     
-    # Intentamos conectar solo si NO estamos en modo offline forzado
     if not offline_mode:
         try:
-            # Check 1: Validar si el cliente DB existe
+     
             if 'db' not in globals():
                 raise Exception("Cliente Firestore no inicializado")
 
-            # Intentamos conectar con limit
-            # NOTA: En Streamlit Cloud a veces el stream() se cuelga si la red es lenta.
-            # Convertimos a lista inmediatamente para forzar la bajada de datos
+        
             if 'prod_docs' not in locals():
-                 prod_ref = db.collection('productos').limit(100) # LIMITAMOS A 100 PARA PROBAR CONEXIÓN RÁPIDA
+                 prod_ref = db.collection('productos').limit(100)
                  sede_ref = db.collection('sedes')
                  
-                 # Usamos get() en lugar de stream() para comportamiento síncrono más predecible en cloud
                  df_p = pd.DataFrame([d.to_dict() for d in prod_ref.get()])
                  df_s = pd.DataFrame([d.to_dict() for d in sede_ref.get()])
                  
@@ -83,10 +74,7 @@ def load_full_data():
             st.warning(f"⚠️ Timeout/Error de Red: {e}. Cambiando a Modo Offline.")
     
     if offline_mode:
-        # Generación de Datos Simulados para "Offline Mode"
-        # Mostramos UN solo mensaje limpio para la demo
-        # st.warning("⚠️ **Modo Demo Activado**: Operando con datos simulados (Sin conexión a Base de Datos)")
-        # 1. Sedes
+ 
         regiones = ['Central', 'Capital', 'Occidente', 'Oriente', 'Andes', 'Guayana']
         df_s = pd.DataFrame({
             'nombre': [f"Ferretería Datil - Sede {i:02d}" for i in range(1, 25)],
@@ -111,19 +99,16 @@ def load_full_data():
         df_p['precio_venta'] = df_p['costo_usd'] * 1.35
         df_p['lead_time_days'] = np.where(df_p['origen']=='Importado', np.random.randint(45, 120, n_prods), np.random.randint(2, 15, n_prods))
 
-    # --- SIMULACIÓN DE DATOS PARA LIKEDIN/DEMO (Stock Actual & Proveedores) ---
-    # Esto se aplica TANTO para datos reales como offline
     proveedores_list = [
         "FerreGlobal Import", "Aceros de Venezuela", "Distribuidora La Fuerte", 
         "Herramientas Pro", "Pinturas Premium", "Tuberías del Centro", 
         "Electricidad Garantizada", "Inversiones El Constructor"
     ]
     
-    # Asignar proveedor aleatorio
+
     df_p['proveedor'] = np.random.choice(proveedores_list, size=len(df_p))
     
-    # Simular Stock Actual (Algunos por debajo del mínimo para activar recompra)
-    # Lógica: 20% de productos tendrán stock crítico
+
     conditions = [np.random.random(len(df_p)) < 0.2]
     choices = [np.floor(df_p['stock_minimo'] * np.random.uniform(0.1, 0.9))]
     # El resto tiene stock saludable
@@ -135,13 +120,12 @@ def load_full_data():
     df_p['margen_pct'] = ((df_p['precio_venta'] - df_p['costo_usd']) / df_p['precio_venta']) * 100
     df_p = df_p.sort_values(by='costo_usd', ascending=False)
     
-    # Cálculo Pareto (Valorizado)
+
     df_p['valor_inv_total'] = df_p['costo_usd'] * df_p['stock_actual']
     df_p = df_p.sort_values(by='valor_inv_total', ascending=False)
     df_p['pct_acumulado'] = df_p['valor_inv_total'].cumsum() / df_p['valor_inv_total'].sum()
     df_p['Clasificación'] = df_p['pct_acumulado'].apply(lambda p: 'A (Top 80%)' if p <= 0.80 else ('B (Siguientes 15%)' if p <= 0.95 else 'C (Últimos 5%)'))
     
-    # Coordenadas Venezuela (Solo si no vinieron de DB o necesitan recalcularse)
     coords = {'Central': [10.2, -68.0], 'Capital': [10.5, -66.9], 'Occidente': [10.6, -71.6], 
               'Oriente': [10.1, -64.6], 'Andes': [8.5, -71.1], 'Guayana': [8.3, -62.7]}
     
@@ -153,30 +137,27 @@ def load_full_data():
 
 df_p, df_s, offline_mode = load_full_data()
 
-# --- HEADER Y SELECTOR ---
 st.title("🇻🇪 Datil Retail: Inteligencia Operativa y Financiera")
 st.markdown("**Autor: Lic. Albert Guacaran** | *Inteligencia de Negocios para la Toma Rápida de Decisiones*") # Branding Principal
 
-# Indicador de Estado de Conexión
 col_status_1, col_status_2 = st.columns([0.85, 0.15])
 with col_status_2:
     if not offline_mode:
        st.success("🟢 Conectado a BD")
     else:
-       # Para la presentación, simulamos conexión exitosa
+  
        st.success("🟢 Conectado a BD")
 
 sede_seleccionada = st.selectbox("📍 Filtrar Análisis por Sede:", ["Todas las Sedes"] + list(df_s['nombre'].unique()))
 
-# Filtrado dinámico
+
 if sede_seleccionada != "Todas las Sedes":
-    df_view_p = df_p.sample(frac=0.7) # Simulación de stock local
+    df_view_p = df_p.sample(frac=0.7)
     sede_info = df_s[df_s['nombre'] == sede_seleccionada].iloc[0]
 else:
     df_view_p = df_p
 
-# --- PESTAÑAS DE ANÁLISIS ---
-# Actualizamos las pestañas para incluir los nuevos módulos
+
 tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
     "📍 Mapa Operativo", 
     "📊 Pareto 80/20 (Pro)", 
@@ -363,26 +344,25 @@ with tab5:
         col_r4.metric("Inv. Importado 🌎", f"${inv_importado:,.2f}", delta=f"{inv_importado/total_inversion*100:.1f}%")
         
         st.markdown("---")
-        
-        # Agrupación por Proveedor
+
         st.subheader("Resumen por Proveedor")
         
-        # Gráfico de Barras: Inversión por Proveedor con color por Origen
+    
         df_prov_summary = df_reorder.groupby(['proveedor', 'origen'])['inversion_estimada'].sum().reset_index().sort_values('inversion_estimada', ascending=False)
         fig_prov = px.bar(df_prov_summary, x='proveedor', y='inversion_estimada', text_auto='.2s',
                           title="Inversión Requerida por Proveedor y Origen ($)", template="plotly_white",
                           color='origen', color_discrete_map={'Nacional': '#1C83E1', 'Importado': '#E63946'})
         st.plotly_chart(fig_prov, use_container_width=True)
         
-        # Detalle Desplegable
+
         st.subheader("Detalle de Pedidos")
-        # Obtenemos lista única de proveedores ordenada por inversión total
+    
         prov_order = df_reorder.groupby('proveedor')['inversion_estimada'].sum().sort_values(ascending=False).index
         
         for prov in prov_order:
             items_prov = df_reorder[df_reorder['proveedor'] == prov]
             total_prov = items_prov['inversion_estimada'].sum()
-            origen_prov = items_prov['origen'].iloc[0] # Asumimos un proveedor suele ser de un origen, o tomamos el primero
+            origen_prov = items_prov['origen'].iloc[0] 
             
             icon = "🇻🇪" if "Nacional" in str(items_prov['origen'].values) else "🌎"
             
